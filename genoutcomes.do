@@ -1,5 +1,5 @@
 // Author: Igor Francetic
-// Date: 22/01/2026
+// Date: 19/02/2026
 // This do-file is called by "prepping.do"
 
 // Construct outcome variables

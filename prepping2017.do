@@ -1,3 +1,7 @@
+// Author: Igor Francetic
+// Date: 19/02/2026
+// This do-file creates the long-format treatment data for 2017, called by "prepping.do"
+
 clear all
 
 // Import patients file 2017
