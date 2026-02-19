@@ -55,6 +55,12 @@ replace langmatch=1 if patient_language==99 // Swiss in non-matching language ca
 label define langlab 0 "Swiss, matching language" 1 "Swiss, non-matching language" 2 "Non-Swiss, matching language" 3 "Non-Swiss, non-matching language"
 label values langmatch langlab
 
+// Extended classification: Africa and East Europe as a separate category
+gen langmatch_ext=langmatch
+replace langmatch_ext=4 if inlist(grnation, 7, 9, 10, 11) // East Europe and Africa (any language match)
+label define langlab_ext 0 "Swiss, matching language" 1 "Swiss, non-matching language" 2 "Non-Swiss, matching language" 3 "Non-Swiss, non-matching language" 4 "Africa and East Europe"
+label values langmatch_ext langlab_ext
+
 // Set globals
 global covariates i.gender_cd##i.age_class b2.finregime i.refsource b0.elixsum_3y
 global outcomes time_basic any_diagact time_diagact any_diagtest count_diagtest
