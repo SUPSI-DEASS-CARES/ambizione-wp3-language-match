@@ -54,18 +54,15 @@ label define natgrlab	1 "Swiss" ///
 						4 "Italy" ///
 						5 "Austria & Liechtenstein" ///
 						6 "West Europe" ///
-						7 "East Europe" ///
 						8 "North Europe" ///
-						9 "West/Central Africa" ///
-						10 "East/South Africa" ///
-						11 "North Africa" ///
 						12 "US and Canada" ///
 						13 "Central & South America & Caribbean" ///
 						14 "Asia (incl. China and Japan)" ///
 						15 "Middle East" ///
 						16 "Australia & Oceania" ///
 						17 "Russia/former URSS and other" ///
-						18 "Missing"
+						18 "Missing" ///
+						19 "Africa and East Europe"
 label values grnation natgrlab
 label variable grnation "Nationality groups"
 

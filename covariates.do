@@ -19,11 +19,8 @@ replace nationality=99 if nationality<0
 gen grnation=nationality if nationality<5&nationality!=.
 replace grnation=5 if nationality==5|nationality==6
 replace grnation=6 if nationality==11
-replace grnation=7 if nationality==12
 replace grnation=8 if nationality==13
-replace grnation=9 if nationality==21
-replace grnation=10 if nationality==22
-replace grnation=11 if nationality==23
+replace grnation=19 if inlist(nationality, 12, 21, 22, 23)
 replace grnation=12 if nationality==31|nationality==32
 replace grnation=13 if nationality==41|nationality==42
 replace grnation=14 if nationality==51|nationality==52|nationality==61|nationality==62
