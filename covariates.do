@@ -16,21 +16,21 @@ destring nationality, replace
 replace nationality=99 if nationality<0
 
 // Prepare groups of nations
-gen grnation=nation if nation<5&nation!=.
-replace grnation=5 if nation==5|nation==6
-replace grnation=6 if nation==11
-replace grnation=7 if nation==12
-replace grnation=8 if nation==13
-replace grnation=9 if nation==21
-replace grnation=10 if nation==22
-replace grnation=11 if nation==23
-replace grnation=12 if nation==31|nation==32
-replace grnation=13 if nation==41|nation==42
-replace grnation=14 if nation==51|nation==52|nation==61|nation==62
-replace grnation=15 if nation==63
-replace grnation=16 if nation==71|nation==72
-replace grnation=17 if nation==81|nation==9
-replace grnation=18 if nation==99|missing(nation)
+gen grnation=nationality if nationality<5&nationality!=.
+replace grnation=5 if nationality==5|nationality==6
+replace grnation=6 if nationality==11
+replace grnation=7 if nationality==12
+replace grnation=8 if nationality==13
+replace grnation=9 if nationality==21
+replace grnation=10 if nationality==22
+replace grnation=11 if nationality==23
+replace grnation=12 if nationality==31|nationality==32
+replace grnation=13 if nationality==41|nationality==42
+replace grnation=14 if nationality==51|nationality==52|nationality==61|nationality==62
+replace grnation=15 if nationality==63
+replace grnation=16 if nationality==71|nationality==72
+replace grnation=17 if nationality==81|nationality==9
+replace grnation=18 if nationality==99|missing(nationality)
 
 * Referral source
 rename sect_ttl_rfr_cd refsource
