@@ -19,28 +19,11 @@ Research code for Work Package 2 of the Ambizione project. All analysis is writt
 
 Run scripts in this order:
 
-1. **Year-specific prep** — `prepping20XX.do` for each relevant year
-2. **Main prep** — `prepping.do`
-3. **Reshape** — `createlongfile.do`
-4. **Covariates & labels** — `covariates.do`, then `labelling.do`
-5. **Outcomes** — `genoutcomes.do`
-6. **Analysis** — `analysis.do`
-
-## Contributing / syncing a fork
-
-If you have already forked this repository and want to pull in the latest changes:
-
-```bash
-# Add upstream once
-git remote add upstream https://github.com/igorfrancetic/ambizione-wp2
-
-# Sync your fork
-git fetch upstream
-git merge upstream/main
-git push origin main
-```
-
-Alternatively, use the **Sync fork** button on GitHub.
+1. **Main prep** — `prepping.do` (calls the year-specific `prepping20XX.do` files internally)
+2. **Reshape** — `createlongfile.do`
+3. **Covariates & labels** — `covariates.do`, then `labelling.do`
+4. **Outcomes** — `genoutcomes.do`
+5. **Analysis** — `analysis.do`
 
 ## Branch conventions
 
