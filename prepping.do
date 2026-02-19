@@ -265,8 +265,18 @@ collapse (sum) visits_lasty, by()
 save $dataout/visits_lasty, replace
 restore
 
+// Count ED visits in the 12 months prior to each observation
+// Requires: ssc install rangestat
+gen ymonth = (year - 2015) * 12 + month
+gen one = 1
+sort is_vcode_aleat ymonth
+rangestat (sum) one, interval(ymonth -12 -1) by(is_vcode_aleat)
+rename one_sum visits_prior12
+drop one ymonth
+replace visits_prior12 = 0 if missing(visits_prior12)
+
 // Label all relevant variables and save
-do labelling 
+do labelling
 save "$dataout/final", replace
 erase "$dataout/temp.dta"
 
