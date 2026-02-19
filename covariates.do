@@ -1,5 +1,5 @@
 // Author: Igor Francetic
-// Date: 22/10/2025
+// Date: 19/02/2026
 // This do-file is called by "prepping.do"
 
 // Create covariates

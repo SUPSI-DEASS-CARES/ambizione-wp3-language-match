@@ -1,3 +1,7 @@
+// Author: Igor Francetic
+// Date: 19/02/2026
+// Main analysis do-file
+
 clear all
 
 // Set system directory paths
