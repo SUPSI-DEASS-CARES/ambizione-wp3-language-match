@@ -1,3 +1,7 @@
+// Author: Igor Francetic
+// Date: 19/02/2026
+// This do-file creates the TARMED service descriptions dataset
+
 clear all
 // Set globals
 global datain T:\AMBIZIONE\Data
