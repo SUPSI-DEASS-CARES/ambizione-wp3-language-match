@@ -104,9 +104,14 @@ label variable age_class "Age bin"
 						
 label var quintile_tertiary "Quintile of MedStat tertiary educatiational attainment"
 
+label define prevlab 0 "0" 1 "1" 2 "2" 3 "3" 4 "4" 5 "5 or more"
+label values visits_prior12 prevlab
+label variable visits_prior12 "ED visits in the previous 12 months"
+
+label var elixsum_3y "Count of Elixhauser comorbidities"
+
 label var time_basic "Time spent on basic consultations"
 label var any_diagact"Any diagnostic activity"
 label var time_diagact"Time spent on diagnostic activity"
 label var any_diagtest "Any diagnostic imaging test"
 label var count_diagtest "Count of diagnostic imaging tests ordered"
-label var elixsum_3y "Count of Elixhauser comorbidities"
