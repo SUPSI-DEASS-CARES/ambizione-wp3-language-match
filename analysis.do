@@ -190,3 +190,30 @@ esttab, keep(*langmatch_ext*) lab scalars(N avgy)
 esttab, keep(*langmatch_ext*) label replace scalars(N avgy) mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. imag. test" "Count of diag. imag. tests") nobase ci nonotes
 
 esttab using "tables\sa_tabular3.tex", keep(*langmatch_ext*) label replace scalars(N avgy) mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. imag. test" "Count of diag. imag. tests") nobase ci nonotes scalars("controls Covariates" "season MedStat x Month seasonality" "N Observations" "avgy Outcome average for ref. group")
+
+// ---- Cost impact analysis ----
+
+// Step 1: Estimate adjusted per-patient cost difference (CHF)
+reghdfe service_amount b0.langmatch $covariates, a(year month##medstat) vce(robust)
+
+// Step 2: Retrieve coefficients for each contrast group
+forvalues cat = 1/3 {
+    scalar delta_`cat' = _b[`cat'.langmatch]
+}
+
+// Step 3: Scale up to population level by year
+preserve
+    keep if e(sample)
+    collapse (count) n = service_amount, by(langmatch year)
+
+    gen cost_impact = 0
+    forvalues cat = 1/3 {
+        replace cost_impact = delta_`cat' * n if langmatch == `cat'
+    }
+
+    // Aggregate excess billing (CHF) across groups within each year
+    collapse (sum) total_cost_impact_chf = cost_impact (sum) n_total = n, by(year)
+
+    list year n_total total_cost_impact_chf
+    export excel "tables/cost_impact.xlsx", firstrow(variables) replace
+restore
