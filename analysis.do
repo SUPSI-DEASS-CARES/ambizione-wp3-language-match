@@ -66,7 +66,7 @@ label define langlab_ext 0 "Swiss, matching language" 1 "Swiss, non-matching lan
 label values langmatch_ext langlab_ext
 
 // Set globals
-global covariates i.gender_cd##i.age_class b2.finregime i.refsource b0.elixsum_3y
+global covariates i.gender_cd##i.age_class b2.finregime i.refsource b0.visits_prior12
 global outcomes time_basic any_diagact time_diagact any_diagtest count_diagtest
 
 // Descriptives
@@ -188,4 +188,5 @@ marginsplot, saving(figures/sa_quant_`var', replace)
 // Export tables
 esttab, keep(*langmatch_ext*) lab scalars(N avgy)
 esttab, keep(*langmatch_ext*) label replace scalars(N avgy) mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. imag. test" "Count of diag. imag. tests") nobase ci nonotes
+
 esttab using "tables\sa_tabular3.tex", keep(*langmatch_ext*) label replace scalars(N avgy) mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. imag. test" "Count of diag. imag. tests") nobase ci nonotes scalars("controls Covariates" "season MedStat x Month seasonality" "N Observations" "avgy Outcome average for ref. group")
