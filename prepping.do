@@ -250,8 +250,11 @@ rangestat (sum) one, interval(ymonth -12 -1) by(is_vcode_aleat)
 rename one_sum visits_prior12
 drop one ymonth
 replace visits_prior12 = 0 if missing(visits_prior12)
+qui: sum visits_prior12, det
+replace visits_prior12=`r(p99)' if visits_prior12>=`r(p99)'
 
 // Label all relevant variables and save
 do labelling
 save "$dataout/final", replace
 erase "$dataout/temp.dta"
+
