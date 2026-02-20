@@ -233,37 +233,6 @@ egen elixsum_3y=rowmax(elixsum0 elixsum1 elixsum2 elixsum3)
 drop elixsum0 elixsum1 elixsum2 elixsum3
 tab elixsum_3y, m
 
-// ED attendances in previous year
-preserve
-keep is_vcode_aleat year month
-duplicates drop is_vcode_aleat year, force
-gen ref_year=year-1
-drop if year==2015
-forvalues x=2015/2021 {
-merge 1:m is_vcode_aleat ref_year using $dataout/`x'_patients, keepusing(treat_dt_beg)
-keep if _merge==3
-drop _merge
-gen monthstr_old=substr(treat_dt_beg, 1, 3)
-gen month_old=.
-replace month_old=1 if monthstr=="JAN"
-replace month_old=2 if monthstr=="FEB"
-replace month_old=3 if monthstr=="MAR"
-replace month_old=4 if monthstr=="APR"
-replace month_old=5 if monthstr=="MAY"
-replace month_old=6 if monthstr=="JUN"
-replace month_old=7 if monthstr=="JUL"
-replace month_old=8 if monthstr=="AUG"
-replace month_old=9 if monthstr=="SEP"
-replace month_old=10 if monthstr=="OCT"
-replace month_old=11 if monthstr=="NOV"
-replace month_old=12 if monthstr=="DEC"
-drop if month<month_old&ref_year==`x'
-}
-drop month_old
-gen visits_lasty=1
-collapse (sum) visits_lasty, by()
-save $dataout/visits_lasty, replace
-restore
 
 // Count ED visits in the 12 months prior to each observation
 // Requires: ssc install rangestat
