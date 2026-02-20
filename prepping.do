@@ -90,6 +90,13 @@ replace temp=1 if diagimaging>`r(p99)'
 drop if temp==1
 drop temp
 
+// Define outcomes for analysis
+gen time_basic=ln(anamnesistime)
+gen any_diagact=(diagnosistime>0)
+gen time_diagact=ln(diagnosistime)
+gen any_diagtest=(diagimaging>0)
+gen count_diagtest=diagimaging if diagimaging>0
+
 // Define unique patient list to merge in comorbidities
 preserve
 bysort is_vcode_aleat (year month): gen counter=_n
@@ -278,4 +285,5 @@ tab los, m
 gen anyhospital=(los>0)
 sum los if anyhospital==1, det
 replace los=`r(p99)' if los>`r(p99)'
+
 save "$dataout/final", replace
