@@ -71,9 +71,9 @@ global outcomes time_basic any_diagact time_diagact any_diagtest count_diagtest
 
 // Descriptives
 gen grouping=langmatch
-label define grlab 0 "Swiss" 1 "Contrast 1" 2 "Contrast 2" 3 "Contrast 3"
+label define grlab 0 "Swiss, matching" 1 "Swiss, non-matching" 2 "Non-Swiss, matching" 3 "Non-Swiss, non-matching"
 label values grouping grlab
-dtable $outcomes i.gender i.age_class i.finregime i.refsource elixsum_3y i.quintile_tertiary i.year, by(grouping) export("tables/table1.tex", replace tableonly)
+dtable $outcomes i.gender i.age_class i.finregime i.refsource visits_prior12 i.quintile_tertiary i.year, by(grouping) export("tables/table1.tex", replace tableonly)
 hist time_basic, saving(figures/out1, replace) percent
 hist time_diagact, saving(figures/out2, replace) percent
 hist count_diagtest, saving(figures/out3, replace) percent
@@ -132,25 +132,41 @@ marginsplot, saving(figures/quant_`var', replace)
 // Export tables
 esttab, keep(*langmatch*) lab scalars(N avgy)
 esttab, keep(*langmatch*) label replace scalars(N avgy) mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. imag. test" "Count of diag. imag. tests") nobase ci nonotes
-esttab using "tables\tabular3.tex", keep(*langmatch*) label replace scalars(N avgy) mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. imag. test" "Count of diag. imag. tests") nobase ci nonotes scalars("controls Covariates" "season MedStat x Month seasonality" "N Observations" "avgy Outcome average for ref. group")
+esttab using "tables\tabular3.tex", keep(*langmatch*) label replace mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. imag. test" "Count of diag. imag. tests") nobase ci nonotes scalars("controls Covariates" "season MedStat x Month seasonality" "N Observations" "avgy Outcome average for ref. group")
+
+////////////////////////////////////////////////////
+// ---- Cost impact analysis ----
+////////////////////////////////////////////////////
+
+// Step 1: Estimate adjusted per-patient cost difference (CHF)
+reghdfe costs b0.langmatch $covariates, a(year month##medstat) vce(robust)
+
+// Step 2: Retrieve coefficients for each contrast group
+forvalues cat = 1/3 {
+    scalar delta_`cat' = _b[`cat'.langmatch]
+}
+
+// Step 3: Scale up to population level by year
+preserve
+    keep if e(sample)
+    collapse (count) n = costs (sum) totalspend=service_amount, by(langmatch year)
+
+    gen cost_impact = 0
+    forvalues cat = 1/3 {
+        replace cost_impact = delta_`cat' * n if langmatch == `cat'
+    }
+
+    // Aggregate excess billing (CHF) across groups within each year
+    collapse (sum) total_cost_impact_chf = cost_impact (sum) totalspend (sum) n_total = n, by(year)
+	gen perc_impact=round(total_cost_impact_chf/totalspend*100, 0.01)
+    list year n_total total_cost_impact_chf totalspend perc_impact
+	mkmat _all, matrix(D)
+	esttab matrix(D) using "tables\cost_impact.tex", replace
+restore
 
 // ---- Sensitivity analysis: langmatch_ext as exposure ----
 // Replicates the main analysis using the extended classification that separates
 // Africa and East Europe from the broader non-matching non-Swiss group.
-
-// Unadjusted regressions
-eststo clear
-foreach var of global outcomes {
-eststo: reghdfe `var' b0.langmatch_ext, a(year month##medstat) vce(robust)
-qui: sum `var' if e(sample)==1&langmatch_ext==0
-scalar avgy = `r(mean)'
-estadd scalar avgy=`=avgy'
-estadd local controls "No"
-estadd local season "Yes"
-est save tables/sa_unadj_`var', replace
-}
-esttab, keep(*langmatch_ext*) label replace scalars(N avgy) mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. imag. test" "Count of diag. imag. tests")
-esttab using "tables\sa_tabularsm2_unadj.tex", keep(*langmatch_ext*) label replace mtitles("Base time" "Any diag. time" "(Log) diag time" "Any diag. imag. test" "Count of diag. imag. tests") scalars("controls Covariates" "season MedStat x Month seasonality" "N Observations" "avgy Outcome average for ref. group") nobase ci nonotes
 
 // Regressions including covariates
 eststo clear
@@ -186,34 +202,6 @@ marginsplot, saving(figures/sa_quant_`var', replace)
 }
 
 // Export tables
-esttab, keep(*langmatch_ext*) lab scalars(N avgy)
-esttab, keep(*langmatch_ext*) label replace scalars(N avgy) mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. imag. test" "Count of diag. imag. tests") nobase ci nonotes
-
-esttab using "tables\sa_tabular3.tex", keep(*langmatch_ext*) label replace scalars(N avgy) mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. imag. test" "Count of diag. imag. tests") nobase ci nonotes scalars("controls Covariates" "season MedStat x Month seasonality" "N Observations" "avgy Outcome average for ref. group")
-
-// ---- Cost impact analysis ----
-
-// Step 1: Estimate adjusted per-patient cost difference (CHF)
-reghdfe service_amount b0.langmatch $covariates, a(year month##medstat) vce(robust)
-
-// Step 2: Retrieve coefficients for each contrast group
-forvalues cat = 1/3 {
-    scalar delta_`cat' = _b[`cat'.langmatch]
-}
-
-// Step 3: Scale up to population level by year
-preserve
-    keep if e(sample)
-    collapse (count) n = service_amount, by(langmatch year)
-
-    gen cost_impact = 0
-    forvalues cat = 1/3 {
-        replace cost_impact = delta_`cat' * n if langmatch == `cat'
-    }
-
-    // Aggregate excess billing (CHF) across groups within each year
-    collapse (sum) total_cost_impact_chf = cost_impact (sum) n_total = n, by(year)
-
-    list year n_total total_cost_impact_chf
-    export excel "tables/cost_impact.xlsx", firstrow(variables) replace
-restore
+esttab *, keep(*langmatch_ext*) lab scalars(N avgy)
+esttab *, keep(*langmatch_ext*) label replace scalars(N avgy) mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. imag. test" "Count of diag. imag. tests") nobase ci nonotes
+esttab using "tables\sa_tabular3.tex", keep(*langmatch_ext*) label replace mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. imag. test" "Count of diag. imag. tests") nobase ci nonotes scalars("controls Covariates" "season MedStat x Month seasonality" "N Observations" "avgy Outcome average for ref. group")
