@@ -10,8 +10,8 @@ sysdir set PERSONAL "E:\Users\igor.francetic\ado\personal\"
 
 // Set globals
 global datain T:\AMBIZIONE\Data\PSA\raw
-global dataout T:\AMBIZIONE\WP2\Igor\dataout
-global main T:\AMBIZIONE\WP2\Igor
+global dataout T:\AMBIZIONE\WP3\Igor\dataout
+global main T:\AMBIZIONE\WP3\Igor
 global rawms T:\AMBIZIONE\Data\MS\raw\
 cd "$main"
 
@@ -204,4 +204,5 @@ marginsplot, saving(figures/sa_quant_`var', replace)
 // Export tables
 esttab *, keep(*langmatch_ext*) lab scalars(N avgy)
 esttab *, keep(*langmatch_ext*) label replace scalars(N avgy) mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. imag. test" "Count of diag. imag. tests") nobase ci nonotes
+
 esttab using "tables\sa_tabular3.tex", keep(*langmatch_ext*) label replace mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. imag. test" "Count of diag. imag. tests") nobase ci nonotes scalars("controls Covariates" "season MedStat x Month seasonality" "N Observations" "avgy Outcome average for ref. group")
