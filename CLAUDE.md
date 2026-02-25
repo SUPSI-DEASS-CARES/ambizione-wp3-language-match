@@ -2,7 +2,7 @@
 
 ## Project overview
 
-This repository contains the Stata analysis code for **Work Package 2** of Igor Francetic's Swiss National Science Foundation (SNSF) **Ambizione** fellowship. It contributes directly to the paper:
+This repository contains the Stata analysis code for **Work Package 3** of Igor Francetic's Swiss National Science Foundation (SNSF) **Ambizione** fellowship. It contributes directly to the paper:
 
 > **"Disparities in hospital Emergency Department care attributable to language mismatch between patients and hospitals in Switzerland"**
 
@@ -150,3 +150,4 @@ All Claude Code development branches must start with `claude/` and end with the 
 ## Data access
 
 Individual patient-level PSA and MS data are restricted. Access requires authorisation from the Swiss Federal Statistical Office. Code is made available following STROBE reporting guidelines; data cannot be shared publicly.
+
