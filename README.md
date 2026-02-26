@@ -1,6 +1,6 @@
-# ambizione-wp2
+# ambizione-wp3
 
-Research code for Work Package 2 of the Ambizione project. All analysis is written in [Stata](https://www.stata.com/) (`.do` files).
+Research code for Work Package 3 of the Ambizione project. All analysis is written in [Stata](https://www.stata.com/) (`.do` files).
 
 ## Repository structure
 
