@@ -16,7 +16,6 @@
 //
 // Outputs:
 //   $dataout/sampleselection.csv          overall attrition table
-//   $dataout/sampleselection_byyear.csv   visit counts by year at each stage
 //   $dataout/sampleselection_counts.tex   \newcommand values for fig1.tex
 // =========================================================================
 
@@ -43,13 +42,11 @@ forvalues x = 2015/2022 {
     use "$dataout/`x'_long", clear
 
     count
-    local n_services_`x' = r(N)
     local n_services_total = `n_services_total' + r(N)
 
     // Unique visits = distinct (treatment_id x patient) combinations
     duplicates drop treatment_id is_vcode_aleat, force
     count
-    local n_visits_`x' = r(N)
     local n_visits_total = `n_visits_total' + r(N)
 }
 
@@ -129,22 +126,12 @@ gen swiss = (nationality == 1)
 count
 scalar n0 = r(N)
 
-// --- Year-by-year counts at this baseline stage ---
-forvalues x = 2015/2022 {
-    count if year == `x'
-    scalar n0_`x' = r(N)
-}
-
 // --- Exclusion 1: Age ≤15 (age_class in {0, 5, 10}) ---
 count if inlist(age_class, 0, 5, 10)
 scalar excl_age = r(N)
 drop if inlist(age_class, 0, 5, 10)
 count
 scalar n1 = r(N)
-forvalues x = 2015/2022 {
-    count if year == `x'
-    scalar n1_`x' = r(N)
-}
 
 // --- Exclusion 2: Ambulance / police / justice / unknown arrival ---
 count if inlist(refsource, 2, 6, 9)
@@ -152,10 +139,6 @@ scalar excl_ref = r(N)
 drop if inlist(refsource, 2, 6, 9)
 count
 scalar n2 = r(N)
-forvalues x = 2015/2022 {
-    count if year == `x'
-    scalar n2_`x' = r(N)
-}
 
 // --- Exclusion 3: No recorded anamnesis time ---
 count if anamnesistime == 0
@@ -163,10 +146,6 @@ scalar excl_ana = r(N)
 drop if anamnesistime == 0
 count
 scalar n3 = r(N)
-forvalues x = 2015/2022 {
-    count if year == `x'
-    scalar n3_`x' = r(N)
-}
 
 // --- Exclusion 4: Outliers (above 99th percentile) ---
 gen temp = .
@@ -182,10 +161,6 @@ drop if temp == 1
 drop temp
 count
 scalar n4 = r(N)
-forvalues x = 2015/2022 {
-    count if year == `x'
-    scalar n4_`x' = r(N)
-}
 
 
 // =========================================================================
@@ -243,83 +218,6 @@ di    "SAMPLE SELECTION — OVERALL"
 di    "=========================================================="
 list stage n_excluded n_remaining, noobs sep(0) ab(90)
 di _n "Final analytical sample: " %15.0fc n4 " ED visits"
-
-
-// --- By-year breakdown ---
-
-clear
-local nrow = 8 * 8   // 8 stages x 8 years
-set obs `nrow'
-
-gen str90  stage       = ""
-gen int    year        = .
-gen double n_remaining = .
-gen double n_excluded  = .
-
-local row = 1
-foreach yr of numlist 2015/2022 {
-    // Stage 1: services
-    replace stage       = "ED service records (edatt==1, non-anonymous)" in `row'
-    replace year        = `yr' in `row'
-    replace n_remaining = `n_services_`yr'' in `row'
-    local ++row
-
-    // Stage 2: unique visits
-    replace stage       = "Unique ED visits (pre-collapse)" in `row'
-    replace year        = `yr' in `row'
-    replace n_remaining = `n_visits_`yr'' in `row'
-    replace n_excluded  = `n_services_`yr'' - `n_visits_`yr'' in `row'
-    local ++row
-
-    // Stage 3: after collapse
-    replace stage       = "After collapse" in `row'
-    replace year        = `yr' in `row'
-    replace n_remaining = n0_`yr' in `row'
-    local ++row
-
-    // Stage 4: after age exclusion
-    replace stage       = "After excl: age <=15" in `row'
-    replace year        = `yr' in `row'
-    replace n_remaining = n1_`yr' in `row'
-    replace n_excluded  = n0_`yr' - n1_`yr' in `row'
-    local ++row
-
-    // Stage 5: after refsource exclusion
-    replace stage       = "After excl: refsource 2/6/9" in `row'
-    replace year        = `yr' in `row'
-    replace n_remaining = n2_`yr' in `row'
-    replace n_excluded  = n1_`yr' - n2_`yr' in `row'
-    local ++row
-
-    // Stage 6: after zero anatime
-    replace stage       = "After excl: anamnesistime == 0" in `row'
-    replace year        = `yr' in `row'
-    replace n_remaining = n3_`yr' in `row'
-    replace n_excluded  = n2_`yr' - n3_`yr' in `row'
-    local ++row
-
-    // Stage 7: after outlier exclusion
-    replace stage       = "After excl: outliers" in `row'
-    replace year        = `yr' in `row'
-    replace n_remaining = n4_`yr' in `row'
-    replace n_excluded  = n3_`yr' - n4_`yr' in `row'
-    local ++row
-
-    // Stage 8: final sample (same as stage 7)
-    replace stage       = "Final analytical sample" in `row'
-    replace year        = `yr' in `row'
-    replace n_remaining = n4_`yr' in `row'
-    local ++row
-}
-
-format n_remaining n_excluded %15.0fc
-
-export delimited "$dataout/sampleselection_byyear.csv", replace
-
-di _n "=========================================================="
-di    "SAMPLE SELECTION — BY YEAR"
-di    "=========================================================="
-list year stage n_excluded n_remaining, noobs sep(8) ab(50)
 
 
 // =========================================================================
