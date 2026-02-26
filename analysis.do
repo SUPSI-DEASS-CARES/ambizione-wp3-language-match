@@ -1,22 +1,23 @@
-// Author: Igor Francetic
-// Date: 19/02/2026
-// Main analysis do-file
-
-clear all
-
-// Set system directory paths
-sysdir set PLUS  "E:\Users\igor.francetic\ado\plus\" 
-sysdir set PERSONAL "E:\Users\igor.francetic\ado\personal\" 
-
-// Set globals
-global datain T:\AMBIZIONE\Data\PSA\raw
-global dataout T:\AMBIZIONE\WP3\Igor\dataout
-global main T:\AMBIZIONE\WP3\Igor
-global rawms T:\AMBIZIONE\Data\MS\raw\
-cd "$main"
-
-// Launch flow for preparing data (fairly long to execute, starts from raw data)
-do prepping
+// =========================================================================
+// analysis.do — ambizione-wp2
+// Author : Igor Francetic
+// Date   : 19/02/2026
+// Purpose: Define exposure variables (langmatch, langmatch_ext), run all
+//          regressions, and export tables and figures.
+//
+// Called by: master.do  (globals and $dataout/final.dta set by that file)
+//
+// Standalone use (if running this file directly without master.do):
+//   Ensure the following are set before do-ing this file:
+//     sysdir set PLUS     "E:\Users\igor.francetic\ado\plus\"
+//     sysdir set PERSONAL "E:\Users\igor.francetic\ado\personal\"
+//     global datain  "T:\AMBIZIONE\Data\PSA\raw"
+//     global dataout "T:\AMBIZIONE\WP2\Igor\dataout"
+//     global rawms   "T:\AMBIZIONE\Data\MS\raw\"
+//     global main    "T:\AMBIZIONE\WP2\Igor"
+//     cd "$main"
+//   and that $dataout/final.dta already exists (produced by prepping.do).
+// =========================================================================
 
 // Open the prepped data ready to be analysed
 clear all
