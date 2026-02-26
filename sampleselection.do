@@ -1,19 +1,24 @@
-// Author: Igor Francetic
-// Date: 25/02/2026
-// Purpose: Generate visit counts at each stage of sample selection for
-//          the patient flow diagram / attrition table.
+// =========================================================================
+// sampleselection.do — ambizione-wp2
+// Author : Igor Francetic
+// Date   : 25/02/2026
+// Purpose: Count visits at each exclusion stage for the patient-flow
+//          diagram (fig1.tex) and the attrition table.
 //
-// Requirements:
-//   - prepping.do must have been run so that the following exist:
-//       $dataout/{year}_long          (service-level ED records, 2015-2022)
-//       $dataout/tarmedtariffs.dta
-//       dataout/medstateducation_{year}.dta  (2017-2022)
-//   - covariates.do and genoutcomes.do must be in the working directory
-//   - Global macros $dataout must be set
+// Called by: master.do  (Phase 2, after prepping.do)
+//
+// Requires (produced by prepping.do):
+//   $dataout/{year}_long.dta          service-level ED records, 2015-2022
+//   $dataout/tarmedtariffs.dta
+//   dataout/medstateducation_{year}.dta  (2017-2022)
+//   covariates.do and genoutcomes.do in the working directory
+//   global $dataout set
 //
 // Outputs:
-//   $dataout/sampleselection.csv        overall attrition table
-//   $dataout/sampleselection_byyear.csv visit counts by year at each stage
+//   $dataout/sampleselection.csv          overall attrition table
+//   $dataout/sampleselection_byyear.csv   visit counts by year at each stage
+//   $dataout/sampleselection_counts.tex   \newcommand values for fig1.tex
+// =========================================================================
 
 
 // =========================================================================
