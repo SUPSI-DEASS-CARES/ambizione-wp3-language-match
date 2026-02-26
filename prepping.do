@@ -90,6 +90,13 @@ replace temp=1 if diagimaging>`r(p99)'
 drop if temp==1
 drop temp
 
+// Define outcomes for analysis
+gen time_basic=ln(anamnesistime)
+gen any_diagact=(diagnosistime>0)
+gen time_diagact=ln(diagnosistime)
+gen any_diagtest=(diagimaging>0)
+gen count_diagtest=diagimaging if diagimaging>0
+
 // Define unique patient list to merge in comorbidities
 preserve
 bysort is_vcode_aleat (year month): gen counter=_n
@@ -243,39 +250,11 @@ rangestat (sum) one, interval(ymonth -12 -1) by(is_vcode_aleat)
 rename one_sum visits_prior12
 drop one ymonth
 replace visits_prior12 = 0 if missing(visits_prior12)
+qui: sum visits_prior12, det
+replace visits_prior12=`r(p99)' if visits_prior12>=`r(p99)'
 
 // Label all relevant variables and save
 do labelling
 save "$dataout/final", replace
 erase "$dataout/temp.dta"
 
-/*
-// Define file with length of stay
-forvalues x=2014/2021 {
-clear all
-import delimited "$rawms\DATA_BFS_MS_240521_`x'.DAT"
-keep _0_0_v01 _0_2_v01a _0_0_v05_2 _1_2_v01m 
-rename (_0_0_v01 _0_2_v01a _0_0_v05_2 _1_2_v01m) (year is_vcode_aleat los month)
-replace year=year+1
-merge m:1 is_vcode_aleat year using dataout/patlist_linkinpat
-keep if _merge==3
-keep if month>=month_ed
-replace year=year+1
-collapse (sum) los (firstnm) month year, by(is_vcode_aleat)
-scalar fn=`x'+1
-save dataout/los_`=fn', replace
-}
-
-// Merge in length of stay
-clear all
-use "$dataout/final", replace
-forvalues x=2015/2022 {
-merge m:1 is_vcode_aleat year using dataout/los_`x', update
-drop _merge
-}
-replace los=0 if missing(los)
-tab los, m
-gen anyhospital=(los>0)
-sum los if anyhospital==1, det
-replace los=`r(p99)' if los>`r(p99)'
-save "$dataout/final", replace
