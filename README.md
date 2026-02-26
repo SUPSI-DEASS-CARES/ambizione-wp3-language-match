@@ -1,6 +1,6 @@
-# ambizione-wp2
+# ambizione-wp3
 
-Stata analysis code for **Work Package 2** of Igor Francetic's Swiss National Science Foundation (SNSF) Ambizione fellowship.
+Stata analysis code for **Work Package 3** of Igor Francetic's Swiss National Science Foundation (SNSF) Ambizione fellowship.
 
 > **"Disparities in hospital Emergency Department care attributable to language mismatch between patients and hospitals in Switzerland"**
 
