@@ -14,4 +14,5 @@ drop temp
 gen diagimaging=(visit_phase=="Diagnostic imaging")
 gen cost3=diagimaging*service_amount
 gen costs=cost1+cost2+cost3
-drop cost1-cost3
+drop cost1 cost2 cost3
+
