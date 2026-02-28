@@ -1,5 +1,5 @@
 // =========================================================================
-// master.do — ambizione-wp2
+// master.do — ambizione-wp3
 // Author : Igor Francetic
 // Purpose: Single entry point for the complete analysis pipeline.
 //          Run this file; it calls every other do-file in the correct order.
@@ -32,9 +32,9 @@ sysdir set PERSONAL "E:\Users\igor.francetic\ado\personal\"
 
 // --- Global paths ---
 global datain  "T:\AMBIZIONE\Data\PSA\raw"       // raw PSA CSV files
-global dataout "T:\AMBIZIONE\WP2\Igor\dataout"   // working / output data
+global dataout "T:\AMBIZIONE\WP3\Igor\dataout"   // working / output data
 global rawms   "T:\AMBIZIONE\Data\MS\raw\"        // raw Medical Statistics .DAT files
-global main    "T:\AMBIZIONE\WP2\Igor"            // project root (do-files live here)
+global main    "T:\AMBIZIONE\WP3\Igor"            // project root (do-files live here)
 
 cd "$main"
 
@@ -85,3 +85,4 @@ do analysis
 di _n "================================================================"
 di    " Pipeline complete."
 di    "================================================================"
+
