@@ -98,7 +98,3 @@ Set in `master.do` (edit these to match your environment):
 | `$main` | Project root (working directory; do-files must live here) |
 
 ---
-
-## Branch conventions
-
-Feature branches follow the pattern `claude/<description>-<sessionid>`.
