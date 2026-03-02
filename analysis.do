@@ -165,10 +165,11 @@ preserve
         replace cost_impact = delta_`cat' * n if langmatch == `cat'
     }
 
-    // Aggregate excess billing (CHF) across groups within each year
+  // Aggregate excess billing (CHF) across groups within each year
     collapse (sum) total_cost_impact_chf = cost_impact (sum) totalspend (sum) n_total = n, by(year)
 	gen perc_impact=round(total_cost_impact_chf/totalspend*100, 0.01)
-    list year n_total total_cost_impact_chf totalspend perc_impact
+    list year total_cost_impact_chf perc_impact
 	mkmat _all, matrix(D)
-	esttab matrix(D) using "tables\cost_impact.tex", replace
+	esttab matrix(D) using "tables\cost_impact.tex", replace mtitles("Year" "Cost impact" "% cost impact")
+
 restore
