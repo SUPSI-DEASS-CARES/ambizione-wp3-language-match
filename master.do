@@ -39,7 +39,7 @@ global main    "T:\AMBIZIONE\WP3\Igor"            // project root (do-files live
 cd "$main"
 
 di _n "================================================================"
-di    " ambizione-wp2 — master pipeline starting"
+di    " ambizione-wp3 — master pipeline starting"
 di    " Working directory: $main"
 di    " Data output:       $dataout"
 di    "================================================================"
@@ -85,4 +85,3 @@ do analysis
 di _n "================================================================"
 di    " Pipeline complete."
 di    "================================================================"
-

@@ -67,21 +67,25 @@ label define langlab_ext 0 "Swiss, matching language" 1 "Swiss, non-matching lan
 label values langmatch_ext langlab_ext
 
 // Set globals
-global covariates i.gender_cd##i.age_class b2.finregime i.refsource b0.visits_prior12
+global covariates i.gender_cd##i.age_class b2.finregime i.refsource b0.visits_prior12 b0.any_hosp12
 global outcomes time_basic any_diagact time_diagact any_diagtest count_diagtest
+global outcomes_descr anamnesistime i.any_diagact diagnosistime i.any_diagtest diagimaging
 
 // Descriptives
 gen grouping=langmatch
+label var grouping "Language match grouping"
 label define grlab 0 "Swiss, matching" 1 "Swiss, non-matching" 2 "Non-Swiss, matching" 3 "Non-Swiss, non-matching"
 label values grouping grlab
-dtable $outcomes i.gender i.age_class i.finregime i.refsource visits_prior12 i.quintile_tertiary i.year, by(grouping) export("tables/table1.tex", replace tableonly)
-hist time_basic, saving(figures/out1, replace) percent
-hist time_diagact, saving(figures/out2, replace) percent
-hist count_diagtest, saving(figures/out3, replace) percent
+dtable $outcomes_descr i.gender i.age_class i.finregime i.refsource visits_prior12 i.any_hosp12 i.quintile_tertiary i.year, by(grouping, notot) export("tables/table1.tex", replace tableonly) 
+hist anamnesistime, width(5) saving(figures/out1, replace) percent xtitle("Time (5 min bins)") title("Time on basic consultations") discrete
+hist diagnosistime if diagnosistime>0, width(2) saving(figures/out2, replace) percent xtitle("Time (2 min bins)") title("Time on diagnostic activities") discrete
+hist count_diagtest, saving(figures/out3, replace) percent xtitle("Count of tests ordered") title("Diagnostic tests ordered") discrete
 graph combine figures/out1.gph figures/out2.gph figures/out3.gph, row(1)
 graph export figures/fig2.eps, replace
 
-// Analyses
+////////////////////////////////////////////////////////////////////////////////
+/****************************** Analyses **************************************/
+////////////////////////////////////////////////////////////////////////////////
 
 // Unadjusted regressions
 eststo clear
@@ -95,7 +99,7 @@ estadd local season "Yes"
 est save tables/unadj_`var', replace
 }
 esttab, keep(*langmatch*) label replace scalars(N avgy) mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. imag. test" "Count of diag. imag. tests")
-esttab using "tables\tabularsm2_unadj.tex", keep(*langmatch*) label replace mtitles("Base time" "Any diag. time" "(Log) diag time" "Any diag. imag. test" "Count of diag. imag. tests") scalars("controls Covariates" "season MedStat x Month seasonality" "N Observations" "avgy Outcome average for ref. group") nobase ci nonotes
+esttab using "tables\tabularsm2_unadj.tex", keep(*langmatch*) label replace mtitles("Base time" "Any diag. time" "(Log) diag time" "Any diag. test" "Count of diag. tests") scalars("controls Covariates" "season MedStat x Month seasonality" "N Observations" "avgy Outcome average for ref. group") nobase ci nonotes
 
 // Regressions including covariates
 eststo clear
@@ -104,16 +108,18 @@ eststo: reghdfe `var' b0.langmatch $covariates, a(year month##medstat) vce(robus
 qui: sum `var' if e(sample)==1&langmatch==0
 scalar avgy = `r(mean)' 
 estadd scalar avgy=`=avgy'
+estadd local controls "No"
+estadd local season "Yes"
 est save tables/adj_`var', replace
 }
 
 // Export tables
-esttab *, keep(*langmatch*) label replace scalars(N avgy) mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. imag. test" "Count of diag. imag. tests") 
-esttab * using "tables\tabular2_adj.tex", keep(*langmatch*) label replace scalars("controls Covariates" "season MedStat x Month seasonality" "N Observations" "avgy Outcome average for ref. group") mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. imag. test" "Count of diag. imag. tests") nobase ci nonotes
-esttab * using "tables\tabularsm3_full.tex", label replace scalars("controls Covariates" "season MedStat x Month seasonality" "N Observations" "avgy Outcome average for ref. group") mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. imag. test" "Count of diag. imag. tests") nobase 
+esttab *, keep(*langmatch*) label replace scalars(N avgy) mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. test" "Count of diag. tests") 
+esttab * using "tables\tabular2_adj.tex", keep(*langmatch*) label replace scalars("controls Covariates" "season MedStat x Month seasonality" "N Observations" "avgy Outcome average for ref. group") mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. test" "Count of diag. tests") nobase ci nonotes
+esttab * using "tables\tabularsm3_full.tex", label replace scalars("controls Covariates" "season MedStat x Month seasonality" "N Observations" "avgy Outcome average for ref. group") mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. test" "Count of diag. tests") nobase longtable
 // Export main coefficient plot
 coefplot (est1, label("(Log) Base time") msymbol(+)) (est2, label("Any diag. time") msymbol(S)) (est3, label("(Log) diag. time")) ///
-(est4, label("Any diag. imag. test") msymbol(D)) (est5, label("Count of diag. imag. tests") msymbol(T)), keep(*langmatch*) xline(0, lcol(red)) saving(figures/fig3, replace)
+(est4, label("Any diag. test") msymbol(D)) (est5, label("Count of diag. tests") msymbol(T)), keep(*langmatch*) xline(0, lcol(red)) saving(figures/fig3, replace)
 graph export figures/fig3.eps, replace
 
 // Regressions including covariates and interaction with MedStat education quintile
@@ -123,17 +129,19 @@ reghdfe `var' b0.langmatch##b5.quintile_tertiary $covariates, a(year month##meds
 est save tables/qedu_`var', replace
 qui: sum `var' if e(sample)==1&langmatch==0
 scalar avgy = `r(mean)' 
-eststo: margins r.langmatch, post over(quintile_tertiary)
+eststo: margins i.quintile_tertiary, post over(langmatch)
 estadd scalar avgy=`=avgy'
 estadd local controls "Yes"
 estadd local season "Yes"
-marginsplot, saving(figures/quant_`var', replace)
+local vlab : var label `var'
+marginsplot, saving(figures/quant_`var', replace) legend(pos(6) row(2) col(2)) title(`vlab') xlabel(, angle(45))
 }
 
 // Export tables
-esttab, keep(*langmatch*) lab scalars(N avgy)
-esttab, keep(*langmatch*) label replace scalars(N avgy) mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. imag. test" "Count of diag. imag. tests") nobase ci nonotes
-esttab using "tables\tabular3.tex", keep(*langmatch*) label replace mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. imag. test" "Count of diag. imag. tests") nobase ci nonotes scalars("controls Covariates" "season MedStat x Month seasonality" "N Observations" "avgy Outcome average for ref. group")
+esttab, keep(*langmatch*) lab scalars(N avgy) 
+esttab, keep(*langmatch*) label replace scalars(N avgy) mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. test" "Count of diag. tests") nobase ci nonotes
+esttab using "tables\tabular3.tex", keep(*langmatch*) label replace mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. test" "Count of diag. tests") nobase ci nonotes scalars("controls Covariates" "season MedStat x Month seasonality" "N Observations" "avgy Outcome average for ref. group") longtable
+
 
 ////////////////////////////////////////////////////
 // ---- Cost impact analysis ----
