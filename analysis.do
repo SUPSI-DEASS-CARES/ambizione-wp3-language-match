@@ -1,22 +1,23 @@
-// Author: Igor Francetic
-// Date: 19/02/2026
-// Main analysis do-file
-
-clear all
-
-// Set system directory paths
-sysdir set PLUS  "E:\Users\igor.francetic\ado\plus\" 
-sysdir set PERSONAL "E:\Users\igor.francetic\ado\personal\" 
-
-// Set globals
-global datain T:\AMBIZIONE\Data\PSA\raw
-global dataout T:\AMBIZIONE\WP2\Igor\dataout
-global main T:\AMBIZIONE\WP2\Igor
-global rawms T:\AMBIZIONE\Data\MS\raw\
-cd "$main"
-
-// Launch flow for preparing data (fairly long to execute, starts from raw data)
-do prepping
+// =========================================================================
+// analysis.do — ambizione-wp3
+// Author : Igor Francetic
+// Date   : 19/02/2026
+// Purpose: Define exposure variables (langmatch, langmatch_ext), run all
+//          regressions, and export tables and figures.
+//
+// Called by: master.do  (globals and $dataout/final.dta set by that file)
+//
+// Standalone use (if running this file directly without master.do):
+//   Ensure the following are set before do-ing this file:
+//     sysdir set PLUS     "E:\Users\igor.francetic\ado\plus\"
+//     sysdir set PERSONAL "E:\Users\igor.francetic\ado\personal\"
+//     global datain  "T:\AMBIZIONE\Data\PSA\raw"
+//     global dataout "T:\AMBIZIONE\WP3\Igor\dataout"
+//     global rawms   "T:\AMBIZIONE\Data\MS\raw\"
+//     global main    "T:\AMBIZIONE\WP3\Igor"
+//     cd "$main"
+//   and that $dataout/final.dta already exists (produced by prepping.do).
+// =========================================================================
 
 // Open the prepped data ready to be analysed
 clear all
@@ -79,21 +80,25 @@ label define agegrouplab 1 "15–39" 2 "40–69" 3 "70–79" 4 "80+"
 label values agegroup agegrouplab
 
 // Set globals
-global covariates i.gender_cd##i.age_class b2.finregime i.refsource b0.visits_prior12
+global covariates i.gender_cd##i.age_class b2.finregime i.refsource b0.visits_prior12 b0.any_hosp12
 global outcomes time_basic any_diagact time_diagact any_diagtest count_diagtest
+global outcomes_descr anamnesistime i.any_diagact diagnosistime i.any_diagtest diagimaging
 
 // Descriptives
 gen grouping=langmatch
-label define grlab 0 "Swiss" 1 "Contrast 1" 2 "Contrast 2" 3 "Contrast 3"
+label var grouping "Language match grouping"
+label define grlab 0 "Swiss, matching" 1 "Swiss, non-matching" 2 "Non-Swiss, matching" 3 "Non-Swiss, non-matching"
 label values grouping grlab
-dtable $outcomes i.gender i.age_class i.finregime i.refsource elixsum_3y i.quintile_tertiary i.year, by(grouping) export("tables/table1.tex", replace tableonly)
-hist time_basic, saving(figures/out1, replace) percent
-hist time_diagact, saving(figures/out2, replace) percent
-hist count_diagtest, saving(figures/out3, replace) percent
+dtable $outcomes_descr i.gender i.age_class i.finregime i.refsource visits_prior12 i.any_hosp12 i.quintile_tertiary i.year, by(grouping, notot) export("tables/table1.tex", replace tableonly) 
+hist anamnesistime, width(5) saving(figures/out1, replace) percent xtitle("Time (5 min bins)") title("Time on basic consultations") discrete
+hist diagnosistime if diagnosistime>0, width(2) saving(figures/out2, replace) percent xtitle("Time (2 min bins)") title("Time on diagnostic activities") discrete
+hist count_diagtest, saving(figures/out3, replace) percent xtitle("Count of tests ordered") title("Diagnostic tests ordered") discrete
 graph combine figures/out1.gph figures/out2.gph figures/out3.gph, row(1)
 graph export figures/fig2.eps, replace
 
-// Analyses
+////////////////////////////////////////////////////////////////////////////////
+/****************************** Analyses **************************************/
+////////////////////////////////////////////////////////////////////////////////
 
 // Unadjusted regressions
 eststo clear
@@ -107,7 +112,7 @@ estadd local season "Yes"
 est save tables/unadj_`var', replace
 }
 esttab, keep(*langmatch*) label replace scalars(N avgy) mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. imag. test" "Count of diag. imag. tests")
-esttab using "tables\tabularsm2_unadj.tex", keep(*langmatch*) label replace mtitles("Base time" "Any diag. time" "(Log) diag time" "Any diag. imag. test" "Count of diag. imag. tests") scalars("controls Covariates" "season MedStat x Month seasonality" "N Observations" "avgy Outcome average for ref. group") nobase ci nonotes
+esttab using "tables\tabularsm2_unadj.tex", keep(*langmatch*) label replace mtitles("Base time" "Any diag. time" "(Log) diag time" "Any diag. test" "Count of diag. tests") scalars("controls Covariates" "season MedStat x Month seasonality" "N Observations" "avgy Outcome average for ref. group") nobase ci nonotes
 
 // Regressions including covariates
 eststo clear
@@ -116,16 +121,18 @@ eststo: reghdfe `var' b0.langmatch $covariates, a(year month##medstat) vce(robus
 qui: sum `var' if e(sample)==1&langmatch==0
 scalar avgy = `r(mean)' 
 estadd scalar avgy=`=avgy'
+estadd local controls "No"
+estadd local season "Yes"
 est save tables/adj_`var', replace
 }
 
 // Export tables
-esttab *, keep(*langmatch*) label replace scalars(N avgy) mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. imag. test" "Count of diag. imag. tests") 
-esttab * using "tables\tabular2_adj.tex", keep(*langmatch*) label replace scalars("controls Covariates" "season MedStat x Month seasonality" "N Observations" "avgy Outcome average for ref. group") mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. imag. test" "Count of diag. imag. tests") nobase ci nonotes
-esttab * using "tables\tabularsm3_full.tex", label replace scalars("controls Covariates" "season MedStat x Month seasonality" "N Observations" "avgy Outcome average for ref. group") mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. imag. test" "Count of diag. imag. tests") nobase 
+esttab *, keep(*langmatch*) label replace scalars(N avgy) mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. test" "Count of diag. tests") 
+esttab * using "tables\tabular2_adj.tex", keep(*langmatch*) label replace scalars("controls Covariates" "season MedStat x Month seasonality" "N Observations" "avgy Outcome average for ref. group") mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. test" "Count of diag. tests") nobase ci nonotes
+esttab * using "tables\tabularsm3_full.tex", label replace scalars("controls Covariates" "season MedStat x Month seasonality" "N Observations" "avgy Outcome average for ref. group") mtitles("(Log) Base time" "Any diag. time" "(Log) diag time" "Any diag. test" "Count of diag. tests") nobase longtable
 // Export main coefficient plot
 coefplot (est1, label("(Log) Base time") msymbol(+)) (est2, label("Any diag. time") msymbol(S)) (est3, label("(Log) diag. time")) ///
-(est4, label("Any diag. imag. test") msymbol(D)) (est5, label("Count of diag. imag. tests") msymbol(T)), keep(*langmatch*) xline(0, lcol(red)) saving(figures/fig3, replace)
+(est4, label("Any diag. test") msymbol(D)) (est5, label("Count of diag. tests") msymbol(T)), keep(*langmatch*) xline(0, lcol(red)) saving(figures/fig3, replace)
 graph export figures/fig3.eps, replace
 
 // Split-sample regressions stratified by broad age group
@@ -215,7 +222,7 @@ forvalues g = 1/4 {
 // ---- Cost impact analysis by canton ----
 
 // Step 1: Estimate adjusted per-patient cost difference (CHF)
-reghdfe service_amount b0.langmatch $covariates, a(year month##medstat) vce(robust)
+reghdfe costs b0.langmatch $covariates, a(year month##medstat) vce(robust)
 
 // Step 2: Retrieve coefficients for each contrast group
 forvalues cat = 1/3 {

@@ -44,7 +44,7 @@ drop _merge
 do covariates
 do genoutcomes
 gen year=`x'
-collapse (sum) service_amount anamnesistime diagnosistime diagimaging (firstnm) *canton  month year refsource gender_cd age_class medstat_reg_cd nationality grnation finregime, by(treatment_id is_vcode_aleat)
+collapse (sum) service_amount anamnesistime diagnosistime diagimaging costs (firstnm) *canton  month year refsource gender_cd age_class medstat_reg_cd nationality grnation finregime, by(treatment_id is_vcode_aleat)
 save "$dataout/`x'_collapsed", replace
 }
 forvalues x=2015/2021 {
@@ -74,6 +74,7 @@ egen hcanton=group(hosp_canton)
 egen pcanton=group(pat_canton)
 gen swiss=(nationality==1)
 
+log using restrictions, replace
 // Apply exclusion criteria
 drop if inlist(age_class, 0,5,10)
 drop if inlist(refsource, 2,6,9)
@@ -89,6 +90,7 @@ sum diagimaging, det
 replace temp=1 if diagimaging>`r(p99)'
 drop if temp==1
 drop temp
+log close
 
 // Define outcomes for analysis
 gen time_basic=ln(anamnesistime)
@@ -152,70 +154,10 @@ scalar fn=`x'+1
 save dataout/elix_`=fn'_1, replace
 }
 
-// Define files with Elixhauser comorbidity score two years prior
-forvalues x=2013/2020 {
-clear all
-import delimited "$rawms\DATA_BFS_MS_240521_`x'.DAT"
-keep _0_0_v01 _0_2_v01a _1_2_v01m _4_2_v010 _4_2_v030 _4_2_v040 _4_2_v050 ///
-_4_2_v060 _4_2_v070 _4_2_v080 _4_2_v090 _4_2_v100  _4_2_v110 _4_2_v120 _4_2_v130 _4_2_v140 _4_2_v150 _4_2_v160 _4_2_v170 ///
-_4_2_v180  _4_2_v190 _4_2_v200 _4_2_v210 _4_2_v220 _4_2_v230 _4_2_v240 _4_2_v250 _4_2_v260 _4_2_v270
-rename (_0_0_v01 _0_2_v01a _1_2_v01m _4_2_v010 _4_2_v030 _4_2_v040 _4_2_v050 ///
-_4_2_v060 _4_2_v070 _4_2_v080 _4_2_v090 _4_2_v100  _4_2_v110 _4_2_v120 _4_2_v130 _4_2_v140 _4_2_v150 _4_2_v160 _4_2_v170 ///
- _4_2_v180  _4_2_v190 _4_2_v200 _4_2_v210 _4_2_v220 _4_2_v230 _4_2_v240 _4_2_v250 _4_2_v260) ///
-(year is_vcode_aleat month diag1 diag2 diag3 diag4 diag5 diag6 diag7 diag8 diag9 diag10 diag11 diag12 ///
-diag13 diag14 diag15 diag16 diag17 diag18 diag19 diag20 diag21 diag22 diag23 diag24 diag25)
-replace year=year+2
-merge m:1 is_vcode_aleat year using dataout/patlist_linkinpat
-keep if _merge==3
-keep if month>=month_ed
-elix22 diag1-diag25, id(is_vcode_aleat)
-gen year=`x'+2
-scalar fn=`x'+2
-save dataout/elix_`=fn'_2, replace
-}
-
-// Define files with Elixhauser comorbidity score three years prior
-forvalues x=2012/2019 {
-clear all
-import delimited "$rawms\DATA_BFS_MS_240521_`x'.DAT"
-keep _0_0_v01 _0_2_v01a _1_2_v01m _4_2_v010 _4_2_v030 _4_2_v040 _4_2_v050 ///
-_4_2_v060 _4_2_v070 _4_2_v080 _4_2_v090 _4_2_v100  _4_2_v110 _4_2_v120 _4_2_v130 _4_2_v140 _4_2_v150 _4_2_v160 _4_2_v170 ///
-_4_2_v180  _4_2_v190 _4_2_v200 _4_2_v210 _4_2_v220 _4_2_v230 _4_2_v240 _4_2_v250 _4_2_v260 _4_2_v270
-rename (_0_0_v01 _0_2_v01a _1_2_v01m _4_2_v010 _4_2_v030 _4_2_v040 _4_2_v050 ///
-_4_2_v060 _4_2_v070 _4_2_v080 _4_2_v090 _4_2_v100  _4_2_v110 _4_2_v120 _4_2_v130 _4_2_v140 _4_2_v150 _4_2_v160 _4_2_v170 ///
- _4_2_v180  _4_2_v190 _4_2_v200 _4_2_v210 _4_2_v220 _4_2_v230 _4_2_v240 _4_2_v250 _4_2_v260) ///
-(year is_vcode_aleat month diag1 diag2 diag3 diag4 diag5 diag6 diag7 diag8 diag9 diag10 diag11 diag12 ///
-diag13 diag14 diag15 diag16 diag17 diag18 diag19 diag20 diag21 diag22 diag23 diag24 diag25)
-replace year=year+3
-merge m:1 is_vcode_aleat year using dataout/patlist_linkinpat
-keep if _merge==3
-keep if month>=month_ed
-elix22 diag1-diag25, id(is_vcode_aleat)
-gen year=`x'+3
-scalar fn=`x'+3
-save dataout/elix_`=fn'_3, replace
-}
-
 // Take main dataset and merge in Elixhauser
-global comorb cmr_aids cmr_alcohol cmr_anemdef cmr_autoimmune cmr_bldloss cmr_cancer_leuk cmr_cancer_lymph cmr_cancer_mets cmr_cancer_nsitu cmr_cancer_solid cmr_cbvd cmr_coag cmr_dementia cmr_depress cmr_diab_cx cmr_diab_uncx cmr_drug_abuse cmr_hf cmr_htn_cx cmr_htn_uncx cmr_liver_mld cmr_liver_sev cmr_lung_chronic cmr_neuro_movt cmr_neuro_oth cmr_neuro_seiz cmr_obese cmr_paralysis cmr_perivasc cmr_psychoses cmr_pulmcirc cmr_renlfl_mod cmr_renlfl_sev cmr_thyroid_hypo cmr_thyroid_oth cmr_ulcer_peptic cmr_valve cmr_wghtloss
 clear all
-use $dataout/temp, clear
-forvalues x=2015/2022 {
-merge m:1 is_vcode_aleat year using dataout/elix_`x'_3, update
-drop if _merge==3
-drop _merge
-erase "$dataout/elix_`x'_3.dta"
-}
-drop $comorb
-rename elixsum elixsum3
-forvalues x=2015/2022 {
-merge m:1 is_vcode_aleat year using dataout/elix_`x'_2, update
-drop if _merge==2
-drop _merge
-erase "$dataout/elix_`x'_2.dta"
-}
-drop $comorb
-rename elixsum elixsum2
+use $dataout/temp
+global comorb cmr_aids cmr_alcohol cmr_anemdef cmr_autoimmune cmr_bldloss cmr_cancer_leuk cmr_cancer_lymph cmr_cancer_mets cmr_cancer_nsitu cmr_cancer_solid cmr_cbvd cmr_coag cmr_dementia cmr_depress cmr_diab_cx cmr_diab_uncx cmr_drug_abuse cmr_hf cmr_htn_cx cmr_htn_uncx cmr_liver_mld cmr_liver_sev cmr_lung_chronic cmr_neuro_movt cmr_neuro_oth cmr_neuro_seiz cmr_obese cmr_paralysis cmr_perivasc cmr_psychoses cmr_pulmcirc cmr_renlfl_mod cmr_renlfl_sev cmr_thyroid_hypo cmr_thyroid_oth cmr_ulcer_peptic cmr_valve cmr_wghtloss
 forvalues x=2015/2022 {
 merge m:1 is_vcode_aleat year using dataout/elix_`x'_1, update
 drop if _merge==2
@@ -230,16 +172,13 @@ drop if _merge==2
 drop _merge
 erase "$dataout/elix_`x'_0.dta"
 }
-drop $comorb
 rename elixsum elixsum0
 replace elixsum0=0 if missing(elixsum0)
 replace elixsum1=0 if missing(elixsum1)
-replace elixsum2=0 if missing(elixsum2)
-replace elixsum3=0 if missing(elixsum3)
-egen elixsum_3y=rowmax(elixsum0 elixsum1 elixsum2 elixsum3)
-drop elixsum0 elixsum1 elixsum2 elixsum3
-tab elixsum_3y, m
-
+egen elixsum_1y=rowmax(elixsum0 elixsum1)
+drop elixsum0 elixsum1
+tab elixsum_1y, m
+gen any_hosp12=(elixsum_1y>0)
 
 // Count ED visits in the 12 months prior to each observation
 // Requires: ssc install rangestat
@@ -252,9 +191,9 @@ drop one ymonth
 replace visits_prior12 = 0 if missing(visits_prior12)
 qui: sum visits_prior12, det
 replace visits_prior12=`r(p99)' if visits_prior12>=`r(p99)'
+replace visits_prior12=. if year==2015
 
 // Label all relevant variables and save
 do labelling
 save "$dataout/final", replace
 erase "$dataout/temp.dta"
-
