@@ -281,19 +281,13 @@ preserve
 restore
 
 // ---- Canton heatmap (spmap) ----
-// Requires Swiss canton boundary shapefile converted once with:
-//   shp2dta using "<path>/canton_boundary.shp", ///
-//       database("$dataout/canton_db") coordinates("$dataout/canton_shp") ///
-//       genid(shape_id) replace
-//
-// After conversion, check the abbreviation attribute name with:
-//   use "$dataout/canton_db", clear
-//   describe
-// Common names: KUERZEL (swisstopo TLM), ABBR (FSO generalised).
-// Adjust the rename line below accordingly.
+// Run shp2dta once to convert the shapefile; comment out after first run.
+shp2dta using "T:/AMBIZIONE/Data/boundaries/swissBOUNDARIES3D_1_5_TLM_KANTONSGEBIET.shp", ///
+    database("$dataout/canton_db") coordinates("$dataout/canton_shp")     ///
+    genid(shape_id) replace
 
 use "$dataout/canton_db", clear
-rename KUERZEL hosp_canton          // adjust to match your shapefile attribute
+rename KUERZEL hosp_canton
 merge 1:1 hosp_canton using "$dataout/cost_impact_canton", keep(1 3) nogenerate
 
 spmap perc_impact using "$dataout/canton_shp", id(shape_id)              ///
