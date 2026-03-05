@@ -97,7 +97,7 @@ gen time_basic=ln(anamnesistime)
 gen any_diagact=(diagnosistime>0)
 gen time_diagact=ln(diagnosistime)
 gen any_diagtest=(diagimaging>0)
-gen count_diagtest=diagimaging if diagimaging>0
+gen count_diagtest=ln(diagimaging)
 
 // Define unique patient list to merge in comorbidities
 preserve

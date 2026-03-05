@@ -4,7 +4,7 @@
 
 // Create covariates
 
-* World region
+// World region
 rename natio_reg_cd nationality
 replace nationality="1" if nationality=="CHE"
 replace nationality="2" if nationality=="DEU"
@@ -32,10 +32,10 @@ replace grnation=16 if nationality==71|nationality==72
 replace grnation=17 if nationality==81|nationality==9
 replace grnation=18 if nationality==99|missing(nationality)
 
-* Referral source
+// Referral source
 rename sect_ttl_rfr_cd refsource
 
-* Canton
+// Canton
 rename kanton_patient pat_canton 
 replace pat_canton="" if pat_canton=="-2"|pat_canton=="-4"
 replace pat_canton="INT" if pat_canton=="-3"

@@ -60,19 +60,7 @@ do prepping
 
 
 // =========================================================================
-// 2. Sample-selection counts and LaTeX flowchart
-//    Reads the {year}_long intermediates produced in Phase 1.
-//    Produces: $dataout/sampleselection.csv
-//              $dataout/sampleselection_byyear.csv
-//              $dataout/sampleselection_counts.tex  (inputs into fig1.tex)
-// =========================================================================
-
-di _n "--- Phase 2: Sample-selection counts (sampleselection.do) ---"
-do sampleselection
-
-
-// =========================================================================
-// 3. Main analysis
+// 2. Main analysis
 //    Reads $dataout/final.dta.
 //    Defines exposure variables (langmatch, langmatch_ext).
 //    Produces: tables/*.tex, figures/*.eps / *.gph

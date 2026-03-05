@@ -7,7 +7,9 @@ gen temp=(visit_phase=="Anamnesis")
 gen anamnesistime=flag*temp
 gen cost1=temp*service_amount
 drop temp
-gen temp=(visit_phase=="Diagnosis")
+gen temp=0
+replace temp=1 if visit_phase=="Diagnosis"
+replace temp=1 if visit_phase=="Diagnostic"
 gen diagnosistime=flag*temp
 gen cost2=temp*service_amount
 drop temp
