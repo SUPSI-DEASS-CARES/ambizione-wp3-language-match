@@ -66,10 +66,11 @@ do prepping
 //    Produces: tables/*.tex, figures/*.eps / *.gph
 // =========================================================================
 
-di _n "--- Phase 3: Main analysis (analysis.do) ---"
+di _n "--- Phase 2: Main analysis (analysis.do) ---"
 do analysis
 
 
 di _n "================================================================"
 di    " Pipeline complete."
 di    "================================================================"
+
