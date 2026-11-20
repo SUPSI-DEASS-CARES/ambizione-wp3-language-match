@@ -6,12 +6,12 @@
 
 // Tariff descriptions
 clear all
-import excel "$rawdata\PSA\Tariftyp_Liste_20241209.xlsx", sheet("Tariftyp-Liste") cellrange(A2:C122) firstrow allstring
+import excel "$rawdata\tariffs\Tariftyp_Liste_20241209.xlsx", sheet("Tariftyp-Liste") cellrange(A2:C122) firstrow allstring
 drop if missing(Tariftyp)
 rename (Tariftyp Status Tarifbezeichnung) (tariftype status tarifdes)
 save "$dataout\tariftypes", replace
 clear all
-import excel "$rawdataTariffs\tarmedtariffs.xlsx", sheet("tarmedtariffs") cellrange(A1:K5303) firstrow allstring
+import excel "$rawdata\tariffs\tarmedtariffs.xlsx", sheet("tarmedtariffs") cellrange(A1:K5303) firstrow allstring
 keep LNP Flag C ALPM Assi TLPT italiano
 rename (LNP Flag C ALPM Assi TLPT italiano) (service_code flag visit_phase cost_a cost_b cost_c visit_setting)
 order service_code flag visit_phase visit_setting cost_a cost_b cost_c
