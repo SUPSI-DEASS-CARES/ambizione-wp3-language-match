@@ -26,16 +26,13 @@
 clear all
 set more off
 
-// --- System directories (ado-file search paths) ---
-sysdir set PLUS     "E:\Users\igor.francetic\ado\plus\"
-sysdir set PERSONAL "E:\Users\igor.francetic\ado\personal\"
-
 // --- Global paths ---
-global datain  "T:\AMBIZIONE\Data\PSA\raw"       // raw PSA CSV files
-global dataout "T:\AMBIZIONE\WP3\Igor\dataout"   // working / output data
-global rawms   "T:\AMBIZIONE\Data\MS\raw\"       // raw Medical Statistics .DAT files
-global rawdata "T:\AMBIZIONE\Data\"				 // folder with raw data
-global main    "T:\AMBIZIONE\WP3\Igor"           // project root (do-files live here)
+global main    "YOURPATH"           // project root (maste and analysis do-files live here)
+global datain  "$main\rawdata\PSA\"       // raw PSA CSV files
+global dataout "$main\dataout\"   // working / output data
+global rawms   "$main\rawdata\MS\"       // raw Medical Statistics .DAT files
+global rawdata "$main\rawdata\"				 // folder with raw data
+
 
 
 cd "$main"
