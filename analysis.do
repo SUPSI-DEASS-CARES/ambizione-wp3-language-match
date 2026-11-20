@@ -6,6 +6,7 @@
 //          regressions, and export tables and figures.
 //
 // Called by: master.do  (globals and $dataout/final.dta set by that file)
+// Standalone: run master.do's setup block first (sets $main, $dataout, $shapefile, creates tables/ figures/).
 // =========================================================================
 
 // Open the prepped data ready to be analysed
@@ -93,6 +94,7 @@ global outcomes_descr i.any_basic anamnesistime i.any_diagact diagnosistime i.an
 ////////////////////////////////////////////////////////////////////////////////
 
 // Sample restrictions
+capture log close
 log using restrictions, replace
 preserve
 count 
@@ -112,7 +114,7 @@ drop if year==2015
 gen sample=1 if flag_onepermonth==1&flag_age!=1&flag_refsource!=1&flag_outliers!=1
 tab sample
 
-dtable $outcomes_descr i.gender i.age_class i.finregime i.refsource i.visits_prior12 i.hospcomorb i.year if sample==1, by(grouping, notot) export("tables/table1.tex", replace tableonly) continuous(,statistics(mean sd median iqr)) factor(,statistics(fvfrequency fvpercent))
+dtable $outcomes_descr i.gender_cd i.age_class i.finregime i.refsource i.visits_prior12 i.hospcomorb i.year if sample==1, by(grouping, notot) export("tables/table1.tex", replace tableonly) continuous(,statistics(mean sd median iqr)) factor(,statistics(fvfrequency fvpercent))
 hist anamnesistime if sample==1, width(5) saving(figures/out1, replace) percent xtitle("Time (5 min bins)") title("Time on basic consultations") discrete
 hist diagnosistime if sample==1, width(5) saving(figures/out2, replace) percent xtitle("Time (5 min bins)") title("Time on diagnostic activities") discrete
 hist diagimaging if sample==1, saving(figures/out3, replace) percent xtitle("Count of tests ordered") title("Diagnostic tests ordered") discrete
@@ -124,6 +126,7 @@ graph export figures/fig2.eps, replace
 /****************************** Analyses **************************************/
 ////////////////////////////////////////////////////////////////////////////////
 
+capture log close
 log using analysis, replace
 
 // Generate scalars for reference group means
@@ -143,7 +146,7 @@ ppmlhdfe `var' b0.langmatch if sample==1, a(year month##medstat) vce(robust) d
 eststo: margins r.langmatch, vce(unconditional) post
 estadd scalar avgy=`=av_`var''
 estadd local controls "No"
-estadd local model "Poisson"
+estadd local estm "Poisson"
 estadd local season "Yes"
 est save tables/unadj_`var', replace
 }
@@ -155,7 +158,7 @@ estadd local season "Yes"
 est save tables/unadj_costs, replace
 
 esttab, keep(*langmatch*) ci label replace scalars(N avgy) mtitles("Basic consultation" "Diagnostic activities" "Diagnostic tests" "Billed amount") coeflabels(r1vs0.langmatch "Swiss, non-matching language" r2vs0.langmatch "Non-Swiss, matching language" r3vs0.langmatch "Non-Swiss, non-matching language") nobase
-esttab using "tables\tabularsm2_unadj.tex",  keep(*langmatch*) label replace mtitles("Basic consultation" "Diagnostic activities" "Diagnostic tests" "Billed amount") scalars("controls Covariates" "estm Model" "season MedStat x Month seasonality" "N Observations" "avgy Outcome average for ref. group") nobase ci nonotes nobase
+esttab using "tables/tabularsm2_unadj.tex",  keep(*langmatch*) label replace mtitles("Basic consultation" "Diagnostic activities" "Diagnostic tests" "Billed amount") scalars("controls Covariates" "estm Model" "season MedStat x Month seasonality" "N Observations" "avgy Outcome average for ref. group") nobase ci nonotes nobase
 
 // 2. Regressions including covariates
 eststo clear
@@ -170,7 +173,7 @@ est save tables/adj_`var', replace
 }
 eststo full_costs: reghdfe costs b0.langmatch $covariates if sample==1, a(year month##medstat) vce(robust)
 estadd scalar avgy=`=av_costs'
-estadd local controls "No"
+estadd local controls "Yes"
 estadd local estm "Linear"
 estadd local season "Yes"
 est save tables/adj_costs, replace
@@ -178,8 +181,8 @@ eststo: est use tables/adj_costs
 
 * Export tables
 esttab est*, keep(*langmatch*) ci label  scalars(N avgy) mtitles("Basic consultation" "Diagnostic activities" "Diagnostic tests" "Billed amount") coeflabels(r1vs0.langmatch "Swiss, non-matching language" r2vs0.langmatch "Non-Swiss, matching language" r3vs0.langmatch "Non-Swiss, non-matching language") nobase
-esttab est* using "tables\tabular2_adj.tex", keep(*langmatch*) label replace scalars("controls Covariates" "estm Model" "season MedStat x Month seasonality" "N Observations" "avgy Outcome average for ref. group") mtitles("Basic consultation" "Diagnostic activities" "Diagnostic tests" "Billed amount") nobase ci nonotes coeflabels(r1vs0.langmatch "Swiss, non-matching language" r2vs0.langmatch "Non-Swiss, matching language" r3vs0.langmatch "Non-Swiss, non-matching language") 
-esttab full_* using "tables\tabularsm3_full.tex", label replace scalars("N Observations") mtitles("Basic consultation" "Diagnostic activities" "Diagnostic tests" "Billed amount") nobase longtable nonote nobase
+esttab est* using "tables/tabular2_adj.tex", keep(*langmatch*) label replace scalars("controls Covariates" "estm Model" "season MedStat x Month seasonality" "N Observations" "avgy Outcome average for ref. group") mtitles("Basic consultation" "Diagnostic activities" "Diagnostic tests" "Billed amount") nobase ci nonotes coeflabels(r1vs0.langmatch "Swiss, non-matching language" r2vs0.langmatch "Non-Swiss, matching language" r3vs0.langmatch "Non-Swiss, non-matching language") 
+esttab full_* using "tables/tabularsm3_full.tex", label replace scalars("N Observations") mtitles("Basic consultation" "Diagnostic activities" "Diagnostic tests" "Billed amount") nobase longtable nonote nobase
 
 * Export main coefficient plot
 eststo clear
@@ -231,7 +234,7 @@ eststo: est use tables/age`g'_`var'
         nobase ci nonotes
 		
 	esttab est10 est11 est12 using "tables/tabular_age4.tex", keep(*langmatch*) label replace ///
-        mtitles("Basic consultation" "estm Model" "Diagnostic activities" "Diagnostic tests" "Billed amount") ///
+        mtitles("Basic consultation" "Diagnostic activities" "Diagnostic tests" "Billed amount") ///
         scalars("controls Covariates" "estm Model" "season MedStat x Month FE" "N Observations" "avgy Ref. group mean") ///
         nobase ci nonotes
 	
@@ -274,14 +277,14 @@ est save tables/sens_`var', replace
 }
 eststo: reghdfe costs b0.langmatch $covariates if sens_sample==1, a(year month##medstat) vce(robust)
 estadd scalar avgy=`=av_costs'
-estadd local controls "No"
+estadd local controls "Yes"
 estadd local estm "Linear"
 estadd local season "Yes"
 est save tables/sens_costs, replace
 
 * Export tables
 esttab est*, label keep(*langmatch*) replace scalars("controls Covariates" "estm Model" "season MedStat x Month seasonality" "N Observations" "avgy Outcome average for ref. group") mtitles("Basic consultation" "Diagnostic activities" "Diagnostic tests" "Billed amount") nobase ci nonotes coeflabels(r1vs0.langmatch "Swiss, non-matching language" r2vs0.langmatch "Non-Swiss, matching language" r3vs0.langmatch "Non-Swiss, non-matching language") 
-esttab est* using "tables\sens_adj.tex", longtable label replace scalars("controls Covariates" "estm Model" "season MedStat x Month seasonality" "N Observations" "avgy Outcome average for ref. group") mtitles("Basic consultation" "Diagnostic activities" "Diagnostic tests" "Billed amount") nobase ci nonotes coeflabels(r1vs0.langmatch "Swiss, non-matching language" r2vs0.langmatch "Non-Swiss, matching language" r3vs0.langmatch "Non-Swiss, non-matching language") 
+esttab est* using "tables/sens_adj.tex", longtable label replace scalars("controls Covariates" "estm Model" "season MedStat x Month seasonality" "N Observations" "avgy Outcome average for ref. group") mtitles("Basic consultation" "Diagnostic activities" "Diagnostic tests" "Billed amount") nobase ci nonotes coeflabels(r1vs0.langmatch "Swiss, non-matching language" r2vs0.langmatch "Non-Swiss, matching language" r3vs0.langmatch "Non-Swiss, non-matching language") 
 
 // 5. Cost impact analysis by canton ----
 
@@ -348,10 +351,14 @@ gen perc_impact = round(total_cost_impact_chf / totalspend * 100, 0.01)
 restore
 
 // 6. ---- Canton heatmap (spmap) ----
-// Run shp2dta once to convert the shapefile; comment out after first run.
-shp2dta using "T:/AMBIZIONE/Data/boundaries/swissBOUNDARIES3D_1_5_TLM_KANTONSGEBIET.shp", ///
-    database("$dataout/canton_db") coordinates("$dataout/canton_shp")     ///
-    genid(shape_id) replace
+// Converts the swisstopo shapefile once; skipped if the converted files already exist.
+// Shapefile is NOT in the repo (licensed data): set $shapefile in master.do.
+capture confirm file "$dataout/canton_db.dta"
+if _rc {
+    shp2dta using "$shapefile", ///
+        database("$dataout/canton_db") coordinates("$dataout/canton_shp") ///
+        genid(shape_id) replace
+}
 
 use "$dataout/canton_db", clear
 rename KANTONSNUM canton_id
@@ -364,4 +371,4 @@ spmap perc_impact using "$dataout/canton_shp", id(shape_id)              ///
     clmethod(quantile) clnumber(5)
 graph export "figures/canton_heatmap.eps", replace
 
-log close
+log close

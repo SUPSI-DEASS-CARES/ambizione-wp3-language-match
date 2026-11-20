@@ -6,38 +6,38 @@ clear all
 
 // Import patients file 2019
 clear all
-import delimited "$datain\2019\HOA_TREATMENT_GEO_COMP_2019.csv"
+import delimited "$datain/2019/HOA_TREATMENT_GEO_COMP_2019.csv"
 egen finregime=group(law_content_cd)
 * Save clean dataset and filter ED attendances
 drop if is_vcode_aleat==0
-save "$dataout\2019_patients", replace
+save "$dataout/2019_patients", replace
 
 // Import (within ED) treatments
 clear all
 forvalues i=1/6 {
 clear all
-import delimited "$datain\2019\HOA_SERVICE_GEO_COMP_`i'_2019"
+import delimited "$datain/2019/HOA_SERVICE_GEO_COMP_`i'_2019"
 gen edcode=0
 replace edcode=1 if inlist(service_code, "35.0610", "35.05" /*, "00.2510", "00.2520", "00.2540", "00.2505" */)
 bysort treatment_id: egen edatt=max(edcode)
 keep if edatt==1
 compress
-save "$dataout\2019_treat_`i'", replace
+save "$dataout/2019_treat_`i'", replace
 }
 
 
 //Append all together and add tariff type flags
 clear all
-use "$dataout\2019_treat_6", clear
-append using "$dataout\2019_treat_5"
-append using "$dataout\2019_treat_4"
-append using "$dataout\2019_treat_3"
-append using "$dataout\2019_treat_2"
-append using "$dataout\2019_treat_1"
+use "$dataout/2019_treat_6", clear
+append using "$dataout/2019_treat_5"
+append using "$dataout/2019_treat_4"
+append using "$dataout/2019_treat_3"
+append using "$dataout/2019_treat_2"
+append using "$dataout/2019_treat_1"
 
 rename service_tar_cd tariftype
 replace tariftype="999" if tariftype=="MAT"|tariftype=="H03"|tariftype=="H04"|tariftype=="E02"|tariftype=="FPP"|tariftype=="H03"|tariftype=="S15"|tariftype=="W00"|tariftype=="TAR"|tariftype=="T33"
-merge m:1 tariftype using "$dataout\tariftypes", keepusing(tarifdes)
+merge m:1 tariftype using "$dataout/tariftypes", keepusing(tarifdes)
 drop if _merge==2
 drop _merge
 destring tariftype, replace
@@ -60,7 +60,7 @@ replace serv_physicalther=1 if inlist(tariftype, 21,22,311,312,324,325,338,341,3
 gen serv_mentalhealth=0
 replace serv_mentalhealth=1 if inlist(tariftype, 30, 31, 330, 340, 352, 581, 582, 915)
 gen serv_protsupp=0
-replace serv_protsupp=1 if inlist(tariftype, 329, 331, 337 907, 908, 909, 910, 914, 925)
+replace serv_protsupp=1 if inlist(tariftype, 329, 331, 337, 907, 908, 909, 910, 914, 925)
 gen serv_otherther=0
 replace serv_otherther=1 if inlist(tariftype, 50, 280, 290,326, 327, 328, 332, 334, 350, 351, 354, 401, 406, 407, 408, 500, 510, 511, 512, 513, 514, 515, 516, 965, 966, 967, 970)
 gen serv_ambul=0
@@ -149,5 +149,5 @@ drop _merge
 
 save "$dataout/2019_long", replace
 forvalues i=1/6{
-erase $dataout\2019_treat_`i'.dta
+erase "$dataout/2019_treat_`i'.dta"
 }
