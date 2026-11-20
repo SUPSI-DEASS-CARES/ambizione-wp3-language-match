@@ -1,5 +1,5 @@
 // Author: Igor Francetic
-// Date: 19/02/2026
+// Date: 20/11/2026
 // This do-file is called by "prepping.do"
 
 // Labelling covariates and exposure
