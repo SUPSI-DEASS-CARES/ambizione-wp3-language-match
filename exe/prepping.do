@@ -1,5 +1,5 @@
 // Author: Igor Francetic
-// Date: 19/02/2026
+// Date: 20/11/2026
 // This do-file is called by "analysis.do"
 
 // Preliminaries
@@ -17,16 +17,6 @@ rename (LNP Flag C ALPM Assi TLPT italiano) (service_code flag visit_phase cost_
 order service_code flag visit_phase visit_setting cost_a cost_b cost_c
 destring flag cost_a cost_b cost_c, replace
 save "$dataout\tarmedtariffs", replace
-
-// Area-level (Medstat region) educational achievement
-forvalues x=2017/2022 {
-clear all
-import delimited dataout/medstateducation_`x'.csv,   varnames(1)  asdoubl 
-rename 	region_id medstat_reg_cd
-destring compulsory_share secondary_share tertiary_share, replace dpcomma
-gen year=`x'
-save dataout/medstateducation_`x', replace
-}
 
 // Prepare long-format files of ED visits for 2015-2022
 clear all
